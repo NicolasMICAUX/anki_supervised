@@ -31,6 +31,7 @@ Redémarrer l'environnement suffit (pas besoin de réinitialiser)
 
 # from huggingface_hub import notebook_login
 # notebook_login()  # READ ACCESS : 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
+# huggingface-cli login to login
 
 from datasets import load_dataset, load_metric
 tokenized_dataset = load_dataset("nicolasmicaux/anki_data", use_auth_token=True)
@@ -135,7 +136,7 @@ super_model_name = model_checkpoint.split("/")[-1]
 model_name = f"{super_model_name}-finetuned-anki"
 output_dir = model_name
 repo_name = get_full_repo_name(model_name)
-repo = Repository(output_dir, clone_from=repo_name)
+# repo = Repository(output_dir, clone_from=repo_name)
 
 from transformers import DataCollatorForTokenClassification
 data_collator = DataCollatorForTokenClassification(tokenizer)
@@ -266,9 +267,9 @@ for epoch in range(num_train_epochs):
     unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
     if accelerator.is_main_process:
         tokenizer.save_pretrained(output_dir)
-        repo.push_to_hub(
-            commit_message=f"Training in progress epoch {epoch}", blocking=False
-        )
+        # repo.push_to_hub(
+        #     commit_message=f"Training in progress epoch {epoch}", blocking=False
+        # )
 
 accelerator.wait_for_everyone()
 unwrapped_model = accelerator.unwrap_model(model)
