@@ -40,6 +40,10 @@ task = "chunk" # Should be one of "ner", "pos" or "chunk" : je pense chunk march
 model_checkpoint = 'xlm-roberta-base'
 batch_size = 8
 
+# Use GPU 1
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 # MULTI-LINGUAL WITHOUT EMBEDDING
 from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)  # automatically choose Tokenizer
