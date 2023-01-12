@@ -29,8 +29,8 @@ Redémarrer l'environnement suffit (pas besoin de réinitialiser)
 # To run the training on TPU, you will need to uncomment the followin line:
 # !pip install cloud-tpu-client==0.10 torch==1.9.0 https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl
 
-from huggingface_hub import notebook_login
-notebook_login()  # READ ACCESS : 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
+# from huggingface_hub import notebook_login
+# notebook_login()  # READ ACCESS : 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
 
 from datasets import load_dataset, load_metric
 tokenized_dataset = load_dataset("nicolasmicaux/anki_data", use_auth_token=True)
@@ -128,7 +128,7 @@ wandb.login()  # 2fc5ae6c733ca9b3eaa6e40ab0097ac45364a294
 *The warning is telling us we are throwing away some weights (the `vocab_transform` and `vocab_layer_norm` layers) and randomly initializing some other (the `pre_classifier` and `classifier` layers). This is absolutely normal in this case, because we are removing the head used to pretrain the model on a masked language modeling objective and replacing it with a new head for which we don't have pretrained weights, so the library warns us we should fine-tune this model before using it for inference, which is exactly what we are going to do.*
 """
 
-notebook_login()  # WRITE ACCESS : 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
+# notebook_login()  # WRITE ACCESS : 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
 
 from huggingface_hub import Repository, get_full_repo_name
 super_model_name = model_checkpoint.split("/")[-1]
