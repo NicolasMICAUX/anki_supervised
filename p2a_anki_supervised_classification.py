@@ -22,10 +22,10 @@ Redémarrer l'environnement suffit (pas besoin de réinitialiser)
 
 # Setup & load dataset
 """
-
-!pip install datasets transformers accelerate
-!apt install git-lfs
-!git config --global credential.helper store
+#
+# !pip install datasets transformers accelerate
+# !apt install git-lfs
+# !git config --global credential.helper store
 # To run the training on TPU, you will need to uncomment the followin line:
 # !pip install cloud-tpu-client==0.10 torch==1.9.0 https://storage.googleapis.com/tpu-pytorch/wheels/torch_xla-1.9-cp37-cp37m-linux_x86_64.whl
 
@@ -46,47 +46,47 @@ tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)  # automatically cho
 """## Weights & Biases"""
 
 # Commented out IPython magic to ensure Python compatibility.
-!pip install wandb
+# !pip install wandb
 import wandb
 wandb.login()  # 2fc5ae6c733ca9b3eaa6e40ab0097ac45364a294
 # %env WANDB_PROJECT=anki
 
 """# Process raw data (Anki raw dataset)"""
 
-from datasets import load_dataset, load_metric
-dataset = load_dataset("nicolasmicaux/anki_raw_data", use_auth_token=True)
-
-import re
-# CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
-IS_CLOZE_NB = 0
-TOTAL = 0
-
-def process(row):
-  global CLEANR, IS_CLOZE_NB, TOTAL
-  text = row['field']
-  # Preprocess text - delete all html tags => already done prior to this
-  # text = re.sub(CLEANR, '', text)  # https://stackoverflow.com/a/12982689
-
-  chunks = []
-  for tmp in text.split('}}'):
-      chunks.extend(re.split(r'{{c[0-9]+::', tmp))
-  
-  # hacky ! on tire profit du fait que tokenizer(List[str]) re-tokenize chaque str
-  ids = tokenizer(chunks, is_split_into_words=True, max_length=512, truncation=True)
-  starts_with_cloze = int(text.startswith('{{'))
-
-  is_cloze = [0 if i is None else (i + starts_with_cloze) % 2  for i in ids.word_ids()]
-
-  ids['labels'] = is_cloze  # name of the labels is often "labels" in the fine-tuned models below
-  
-  # assert len(is_cloze) == len(ids['input_ids']) (always true)
-
-  IS_CLOZE_NB += sum(is_cloze)
-  TOTAL += len(is_cloze)
-  return ids
-
-tokenized_dataset = dataset.map(process)
-print('Proportion IS_CLOZE : ', IS_CLOZE_NB/TOTAL)
+# from datasets import load_dataset, load_metric
+# dataset = load_dataset("nicolasmicaux/anki_raw_data", use_auth_token=True)
+#
+# import re
+# # CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+# IS_CLOZE_NB = 0
+# TOTAL = 0
+#
+# def process(row):
+#   global CLEANR, IS_CLOZE_NB, TOTAL
+#   text = row['field']
+#   # Preprocess text - delete all html tags => already done prior to this
+#   # text = re.sub(CLEANR, '', text)  # https://stackoverflow.com/a/12982689
+#
+#   chunks = []
+#   for tmp in text.split('}}'):
+#       chunks.extend(re.split(r'{{c[0-9]+::', tmp))
+#
+#   # hacky ! on tire profit du fait que tokenizer(List[str]) re-tokenize chaque str
+#   ids = tokenizer(chunks, is_split_into_words=True, max_length=512, truncation=True)
+#   starts_with_cloze = int(text.startswith('{{'))
+#
+#   is_cloze = [0 if i is None else (i + starts_with_cloze) % 2  for i in ids.word_ids()]
+#
+#   ids['labels'] = is_cloze  # name of the labels is often "labels" in the fine-tuned models below
+#
+#   # assert len(is_cloze) == len(ids['input_ids']) (always true)
+#
+#   IS_CLOZE_NB += sum(is_cloze)
+#   TOTAL += len(is_cloze)
+#   return ids
+#
+# tokenized_dataset = dataset.map(process)
+# print('Proportion IS_CLOZE : ', IS_CLOZE_NB/TOTAL)
 
 """*NB : impossible de mettre is_cloze = [-1 if i is None, ...] CAR FAIT UNE ERREUR DANS LA PERTE BCELoss.*
 
@@ -95,33 +95,33 @@ print('Proportion IS_CLOZE : ', IS_CLOZE_NB/TOTAL)
 #### Vérif
 """
 
-row = dataset['train'][0]
-# text = re.sub(CLEANR, '', row['tokens'])
-text = row['field']
-chunks = []
-for tmp in text.split('}}'):
-    chunks.extend(re.split(r'{{c[0-9]+::', tmp))
-ids = tokenizer(chunks, is_split_into_words=True)
-print(text)
-print(ids)
-print(tokenizer.convert_ids_to_tokens(ids["input_ids"]))
-print(ids.word_ids())
-starts_with_cloze = int(text.startswith('{{'))
-print([0 if i is None else i % 2 + starts_with_cloze for i in ids.word_ids()])
-
-"""#### Export"""
-
-tokenized_dataset['train'] = tokenized_dataset['train'].remove_columns(['field', 'file', 'usn', 'guid', 'mid', 'mod', 'id', 'tags', 'lang'])
-
-tokenized_dataset = tokenized_dataset['train'].train_test_split(test_size=0.1)
-
-tokenized_dataset
-
-"""Push dataset to Huggingface Hub"""
-
-notebook_login()  # WRITE ACCESS : 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
-
-tokenized_dataset.push_to_hub("nicolasmicaux/anki_data", private=True)
+# row = dataset['train'][0]
+# # text = re.sub(CLEANR, '', row['tokens'])
+# text = row['field']
+# chunks = []
+# for tmp in text.split('}}'):
+#     chunks.extend(re.split(r'{{c[0-9]+::', tmp))
+# ids = tokenizer(chunks, is_split_into_words=True)
+# print(text)
+# print(ids)
+# print(tokenizer.convert_ids_to_tokens(ids["input_ids"]))
+# print(ids.word_ids())
+# starts_with_cloze = int(text.startswith('{{'))
+# print([0 if i is None else i % 2 + starts_with_cloze for i in ids.word_ids()])
+#
+# """#### Export"""
+#
+# tokenized_dataset['train'] = tokenized_dataset['train'].remove_columns(['field', 'file', 'usn', 'guid', 'mid', 'mod', 'id', 'tags', 'lang'])
+#
+# tokenized_dataset = tokenized_dataset['train'].train_test_split(test_size=0.1)
+#
+# tokenized_dataset
+#
+# """Push dataset to Huggingface Hub"""
+#
+# notebook_login()  # WRITE ACCESS : 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
+#
+# tokenized_dataset.push_to_hub("nicolasmicaux/anki_data", private=True)
 
 """# Fine-tuning the model
 
@@ -321,17 +321,17 @@ A propos de la loss https://pytorch.org/docs/stable/generated/torch.nn.CrossEntr
 # Commented out IPython magic to ensure Python compatibility.
 # Admin code (git)
 # %cd /content
-!git clone https://huggingface.co/datasets/nicolasmicaux/anki_data
-# %cd anki_data
-!git lfs install
-!git rm -r data
-!git rm dataset_infos.json
-!git config --global user.email "nicolas.micaux@telecom-paris.fr"
-!git commit -m "remove data/"
-!git push
+# !git clone https://huggingface.co/datasets/nicolasmicaux/anki_data
+# # %cd anki_data
+# !git lfs install
+# !git rm -r data
+# !git rm dataset_infos.json
+# !git config --global user.email "nicolas.micaux@telecom-paris.fr"
+# !git commit -m "remove data/"
+# !git push
 
-import torch
-torch.cuda.empty_cache()
-
-from collections import Counter
-Counter([item for sublist in tokenized_dataset['test']['labels'] for item in sublist])
+# import torch
+# torch.cuda.empty_cache()
+#
+# from collections import Counter
+# Counter([item for sublist in tokenized_dataset['test']['labels'] for item in sublist])
