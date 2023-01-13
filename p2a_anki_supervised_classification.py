@@ -159,9 +159,9 @@ eval_dataloader = DataLoader(
 )  # TODO : why use separate val and test ?
 
 from transformers import AutoModelForTokenClassification
-# model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2)
+model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2)
 # retrain from last fine-tuned checkpoint
-model = AutoModelForTokenClassification.from_pretrained(repo_name, num_labels=2)
+# model = AutoModelForTokenClassification.from_pretrained(repo_name, num_labels=2)
 
 from torch.optim import AdamW
 lr = 2e-5
