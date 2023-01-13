@@ -36,7 +36,7 @@ Redémarrer l'environnement suffit (pas besoin de réinitialiser)
 from datasets import load_dataset, load_metric
 tokenized_dataset = load_dataset("nicolasmicaux/anki_data", use_auth_token=True)
 
-task = "ner" # Should be one of "ner", "pos" or "chunk" : je pense chunk marchera le mieux si je pars d'un truc pretrained
+task = "pos" # Should be one of "ner", "pos" or "chunk" : je pense chunk marchera le mieux si je pars d'un truc pretrained
 model_checkpoint = 'xlm-roberta-base'
 batch_size = 8
 
@@ -159,7 +159,9 @@ eval_dataloader = DataLoader(
 )  # TODO : why use separate val and test ?
 
 from transformers import AutoModelForTokenClassification
-model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2)
+# model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=2)
+# retrain from last fine-tuned checkpoint
+model = AutoModelForTokenClassification.from_pretrained(repo_name, num_labels=2)
 
 from torch.optim import AdamW
 lr = 2e-5
