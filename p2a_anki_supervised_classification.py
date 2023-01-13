@@ -36,7 +36,7 @@ Redémarrer l'environnement suffit (pas besoin de réinitialiser)
 from datasets import load_dataset, load_metric
 tokenized_dataset = load_dataset("nicolasmicaux/anki_data", use_auth_token=True)
 
-task = "chunk" # Should be one of "ner", "pos" or "chunk" : je pense chunk marchera le mieux si je pars d'un truc pretrained
+task = "ner" # Should be one of "ner", "pos" or "chunk" : je pense chunk marchera le mieux si je pars d'un truc pretrained
 model_checkpoint = 'xlm-roberta-base'
 batch_size = 8
 
