@@ -36,13 +36,13 @@ Redémarrer l'environnement suffit (pas besoin de réinitialiser)
 from datasets import load_dataset, load_metric
 tokenized_dataset = load_dataset("nicolasmicaux/anki_data", use_auth_token=True)
 
-task = "pos" # Should be one of "ner", "pos" or "chunk" : je pense chunk marchera le mieux si je pars d'un truc pretrained
+
 model_checkpoint = 'xlm-roberta-base'
-batch_size = 8
+batch_size = 16
 
 # Use GPU 1
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # MULTI-LINGUAL WITHOUT EMBEDDING
 from transformers import AutoTokenizer
@@ -211,7 +211,6 @@ import torch
 config = {
   "learning_rate": lr,
   "batch_size": batch_size,
-  'pretraining_task': task,
   'base_model': model_checkpoint,
 }
 
@@ -224,6 +223,7 @@ for epoch in range(num_train_epochs):
     # Training
     model.train()
     for i, batch in enumerate(train_dataloader):
+        del batch["__index_level_0__"]
         outputs = model(**batch)
         loss = outputs.loss
         accelerator.backward(loss)
@@ -247,25 +247,28 @@ for epoch in range(num_train_epochs):
           wandb.log({'epoch': epoch, 'accuracy': results[0], 'precision': results[1], 'recall': results[2], 'f1': results[3]}, commit=False)
         wandb.log({'loss': loss, 'lr': lr_scheduler.get_last_lr()[0]})
 
-    # Evaluation
-    model.eval()
-    for batch in eval_dataloader:
-        with torch.no_grad():
-            outputs = model(**batch)
+        if i % 1000 == 0:
+            # Evaluation
+            model.eval()
+            for eval_batch in eval_dataloader:
+                del batch["__index_level_0__"]
+                with torch.no_grad():
+                    outputs = model(**eval_batch)
 
-        predictions = outputs.logits.argmax(dim=-1)
-        labels = batch["labels"]
-        
-        true_predictions, true_labels = postprocess(predictions, labels)
-        for pred, lab in zip(true_predictions, true_labels):
-          accuracy.add_batch(predictions=pred, references=lab)
-          precision.add_batch(predictions=pred, references=lab)
-          recall.add_batch(predictions=pred, references=lab)
-          f1.add_batch(predictions=pred, references=lab)
+                predictions = outputs.logits.argmax(dim=-1)
+                labels = eval_batch["labels"]
 
-    results = [accuracy.compute(), precision.compute(), recall.compute(), f1.compute()]
-    print(f"epoch {epoch}:", results)
-    wandb.log({'epoch': epoch, 'accuracy': results[0], 'precision': results[1], 'recall': results[2], 'f1': results[3]})
+                true_predictions, true_labels = postprocess(predictions, labels)
+                for pred, lab in zip(true_predictions, true_labels):
+                  accuracy.add_batch(predictions=pred, references=lab)
+                  precision.add_batch(predictions=pred, references=lab)
+                  recall.add_batch(predictions=pred, references=lab)
+                  f1.add_batch(predictions=pred, references=lab)
+
+            results = [accuracy.compute(), precision.compute(), recall.compute(), f1.compute()]
+            print(f"epoch {epoch}:", results)
+            wandb.log({'epoch': epoch, 'eval.accuracy': results[0], 'eval.precision': results[1],
+                       'eval.recall': results[2], 'eval.f1': results[3]})
 
     # Save and upload
     accelerator.wait_for_everyone()
