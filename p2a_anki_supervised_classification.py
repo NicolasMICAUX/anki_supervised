@@ -252,7 +252,7 @@ for epoch in range(num_train_epochs):
             # Evaluation
             model.eval()
             for eval_batch in eval_dataloader:
-                if "__index_level_0__" in batch:
+                if "__index_level_0__" in eval_batch:
                     del eval_batch["__index_level_0__"]
                 with torch.no_grad():
                     outputs = model(**eval_batch)
